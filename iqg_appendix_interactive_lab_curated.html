@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>IQG Appendix Interactive Laboratory</title>
+  <style>
+    :root{
+      --bg:#f8fafc;
+      --card:#ffffff;
+      --text:#0f172a;
+      --muted:#475569;
+      --border:#cbd5e1;
+      --blue:90,160,255;
+      --orange:255,120,40;
+      --green:60,179,113;
+      --purple:147,51,234;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text)}
+    .wrap{max-width:1360px;margin:0 auto;padding:24px}
+    .card{background:var(--card);border-radius:24px;box-shadow:0 10px 30px rgba(15,23,42,.08);padding:24px}
+    h1,h2,p{margin:0}
+    .topbar,.right-head{display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+    .muted{color:var(--muted);line-height:1.6}
+    .btnrow,.actionrow{display:flex;gap:8px;flex-wrap:wrap}
+    button,select{border:1px solid var(--border);background:#fff;border-radius:16px;padding:10px 14px;font-size:14px;cursor:pointer}
+    button:hover,select:hover{background:#f8fafc}
+    .layout{display:grid;grid-template-columns:1.08fr .92fr;gap:24px;margin-top:24px}
+    .controls-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:18px}
+    .control{border:1px solid #e2e8f0;border-radius:18px;padding:14px;background:#fff}
+    .control-head{display:flex;justify-content:space-between;gap:12px;margin-bottom:8px;font-size:14px;color:var(--muted)}
+    .pill{background:#f1f5f9;border-radius:999px;padding:4px 10px;font-size:12px;color:#334155;white-space:nowrap}
+    input[type="range"]{width:100%}
+    .equation-box,.mode-box,.note{margin-top:16px;background:#f8fafc;border-radius:18px;padding:16px;border:1px solid #e2e8f0}
+    code{display:block;margin-top:12px;background:#fff;border-radius:14px;padding:12px;font-size:14px;overflow:auto}
+    .field-shell{margin-top:18px;background:#020617;border-radius:26px;padding:18px;min-height:560px;overflow:hidden;border:1px solid rgba(255,255,255,.06)}
+    .field{display:grid;gap:3px}
+    .cell{aspect-ratio:1/1;border-radius:4px;transition:background .08s linear, box-shadow .08s linear, transform .08s linear, opacity .08s linear}
+    .field3d-wrap{width:100%;height:500px;perspective:1200px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+    .field3d{position:relative;width:440px;height:440px;transform-style:preserve-3d;transform:rotateX(64deg) rotateZ(-45deg) scale(1.02)}
+    .bar{position:absolute;width:18px;transform-style:preserve-3d;transition:height .08s linear, transform .08s linear, opacity .08s linear}
+    .bar-face{position:absolute;left:0;top:0;width:100%;height:100%;border:1px solid rgba(255,255,255,.04)}
+    .bar-top{height:18px;transform:rotateX(90deg) translateZ(9px);transform-origin:center top}
+    .bar-front{transform:translateZ(9px)}
+    .bar-side{transform:rotateY(90deg) translateZ(9px);transform-origin:left center;width:18px}
+    .metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-top:16px}
+    .metric{border:1px solid #e2e8f0;border-radius:18px;padding:14px;background:#fff}
+    .metric .t{font-size:13px;color:#64748b}
+    .metric .v{font-size:28px;font-weight:700;margin-top:4px}
+    .metric .s{font-size:13px;color:#475569;margin-top:4px}
+    .summary{margin-top:24px}
+    .summary-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:16px}
+    .row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+    .small{font-size:13px}
+    @media (max-width: 1050px){
+      .layout{grid-template-columns:1fr}
+      .controls-grid{grid-template-columns:repeat(2,1fr)}
+      .metrics{grid-template-columns:repeat(2,1fr)}
+      .summary-grid{grid-template-columns:repeat(2,1fr)}
+    }
+    @media (max-width: 640px){
+      .controls-grid,.summary-grid,.metrics,.row2{grid-template-columns:1fr}
+      .wrap{padding:14px}
+      .card{padding:16px}
+      .field-shell{min-height:420px}
+      .field3d-wrap{height:360px}
+      .field3d{width:300px;height:300px;transform:rotateX(64deg) rotateZ(-45deg) scale(.9)}
+      .bar{width:12px}
+      .bar-top{height:12px;transform:rotateX(90deg) translateZ(6px)}
+      .bar-front{transform:translateZ(6px)}
+      .bar-side{width:12px;transform:rotateY(90deg) translateZ(6px)}
+    }
+  
+    details.mode-box summary{list-style:none}
+    details.mode-box summary::-webkit-details-marker{display:none}
+    details.mode-box[open] summary{margin-bottom:8px}
+
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="card">
+      <div class="topbar">
+        <div>
+          <h1>IQG Appendix Interactive Laboratory</h1>
+          <p class="muted" style="margin-top:10px;max-width:980px;">
+            Standalone one-file IQG simulator with 2D/3D field views, ignition detection, candidate quantule detection,
+            and a reinitiation mode for testing restart behavior after decay.
+          </p>
+        </div>
+        <div class="btnrow">
+          <button id="presetA">Linear view</button>
+          <button id="presetB">Nonlinear view</button>
+          <button id="presetC">Recommended view</button>
+          <button id="presetManuscript">Normalized comparison</button>
+        </div>
+      </div>
+    
+    <div class="card" style="margin-top:24px;">
+      <h2>Use in the monograph</h2>
+      <p class="muted" style="margin-top:8px;max-width:1020px;">
+        This simulator accompanies the appendix as an interactive behavioral laboratory. It is designed to let the reader inspect
+        how the reduced PIF system reproduces the qualitative logic of the IQG framework: thresholded activation, nonlinear
+        structuring, bounded saturation, quantule-like persistence, restart behavior, and identity-like structure families.
+      </p>
+      <div class="summary-grid" style="margin-top:18px;">
+        <div class="metric"><div class="t">Purpose</div><div class="v" style="font-size:22px;">Behavioral</div><div class="s">Supports qualitative appendix claims</div></div>
+        <div class="metric"><div class="t">Scope</div><div class="v" style="font-size:22px;">Reduced PIF</div><div class="s">Not a full calibrated physical solver</div></div>
+        <div class="metric"><div class="t">Primary laws</div><div class="v" style="font-size:22px;">SBIA / LNIS / LES</div><div class="s">Core emergence behavior</div></div>
+        <div class="metric"><div class="t">Extended behaviors</div><div class="v" style="font-size:22px;">IQL / REL / proto-identity</div><div class="s">Secondary behavioral support</div></div>
+      </div>
+    </div>
+
+    
+    <div class="card" style="margin-top:24px;">
+      <h2>Reader guide</h2>
+      <p class="muted" style="margin-top:8px;max-width:1020px;">
+        This interactive appendix is best read as a reduced behavioral laboratory. It is not meant to prove final physical calibration.
+        Instead, it lets the reader inspect how the reduced PIF system reproduces the qualitative logic discussed in the appendix.
+      </p>
+      <div class="summary-grid" style="margin-top:18px;">
+        <div class="metric"><div class="t">Recommended starting point</div><div class="v" style="font-size:22px;">PIF-c</div><div class="s">Use the full reduced coupled mode</div></div>
+        <div class="metric"><div class="t">Recommended field</div><div class="v" style="font-size:22px;">Anisotropic</div><div class="s">Best for visible localized emergence</div></div>
+        <div class="metric"><div class="t">Best first reading</div><div class="v" style="font-size:22px;">Balanced families</div><div class="s">Most neutral identity overview</div></div>
+        <div class="metric"><div class="t">Interpretation</div><div class="v" style="font-size:22px;">Behavioral</div><div class="s">Qualitative support, not full calibration</div></div>
+      </div>
+      <div class="note">
+        <strong>Suggested order.</strong> First inspect thresholded activation and structured emergence in the default PIF-c configuration.
+        Then switch to reinitiation mode to inspect restart behavior. Finally, enable the identity display to see recurring structure families.
+      </div>
+    </div>
+
+    <div class="card" style="margin-top:24px;">
+      <h2>Behavioral validation scope</h2>
+      <p class="muted" style="margin-top:8px;max-width:1020px;">
+        This version adds two theory-strengthening behaviors—<strong>candidate quantule detection</strong> for IQL-style localized stabilized peaks and <strong>reinitiation mode</strong> for REL-style restart after decay—plus a manuscript-faithful time field whose direction is anchored to entropy curvature and whose visibility is gated by SBIA/local activation. These remain reduced behavioral tests, not final physical calibration.
+      </p>
+      <div class="summary-grid" style="margin-top:18px;">
+        <div class="metric"><div class="t">ρ_real (nats·m⁻³)</div><div class="v" style="font-size:24px;">6.53e42</div><div class="s">Monograph reference threshold</div></div>
+        <div class="metric"><div class="t">ρ_real (bits·m⁻³)</div><div class="v" style="font-size:24px;">9.42e42</div><div class="s">Used for local PDE normalization</div></div>
+        <div class="metric"><div class="t">S_crit</div><div class="v" style="font-size:24px;">3.16e17</div><div class="s">SBIA ignition threshold</div></div>
+        <div class="metric"><div class="t">t_ignite</div><div class="v" style="font-size:24px;">1.03e-43 s</div><div class="s">Monograph reference time</div></div>
+      </div>
+    </div>
+
+    <div class="layout">
+      <section class="card">
+        <div class="row2">
+          <div>
+            <label class="small">Equation</label>
+            <select id="mode" style="width:100%;margin-top:6px;">
+              <option value="pif-a">PIF-a (linear)</option>
+              <option value="pif-b">PIF-b (nonlinear)</option>
+              <option value="pif-c">PIF-c (full coupling)</option>
+            </select>
+          </div>
+          <div>
+            <label class="small">Entropy field</label>
+            <select id="fieldMode" style="width:100%;margin-top:6px;">
+              <option value="radial">Radial</option>
+              <option value="anisotropic">Anisotropic</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row2">
+          <div>
+            <label class="small">View mode</label>
+            <select id="viewMode" style="width:100%;margin-top:6px;">
+              <option value="2d">2D grid</option>
+              <option value="3d" selected>3D height map</option>
+            </select>
+          </div>
+          <div>
+            <label class="small">Simulation mode</label>
+            <select id="runMode" style="width:100%;margin-top:6px;">
+              <option value="normal">Normal emergence</option>
+              <option value="reinitiation">Reinitiation / restart</option>
+              <option value="interaction">Quantule interaction / dual-seed</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div>
+            <label class="small">Seed separation</label>
+            <select id="seedSeparation" style="width:100%;margin-top:6px;">
+              <option value="0.18">Close</option>
+              <option value="0.28" selected>Medium</option>
+              <option value="0.40">Wide</option>
+            </select>
+          </div>
+          <div>
+            <label class="small">Secondary seed strength</label>
+            <select id="seedStrength" style="width:100%;margin-top:6px;">
+              <option value="0.70">Weak</option>
+              <option value="1.00" selected>Equal</option>
+              <option value="1.30">Strong</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div>
+            <label class="small">Repulsion / competition</label>
+            <select id="repulsionStrength" style="width:100%;margin-top:6px;">
+              <option value="0.00">Off</option>
+              <option value="0.10">Low</option>
+              <option value="0.20" selected>Medium</option>
+              <option value="0.35">High</option>
+              <option value="0.50">Extreme</option>
+            </select>
+          </div>
+          <div>
+            <label class="small">Bridge attraction</label>
+            <select id="bridgeStrength" style="width:100%;margin-top:6px;">
+              <option value="0.00">Off</option>
+              <option value="0.02">Low</option>
+              <option value="0.04" selected>Medium</option>
+              <option value="0.08">High</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div>
+            <label class="small">Time-field overlay (manuscript-faithful)</label>
+            <select id="showTimeField" style="width:100%;margin-top:6px;">
+              <option value="off">Off</option>
+              <option value="on" selected>On</option>
+            </select>
+          </div>
+          <div>
+            <label class="small">Arrow density</label>
+            <select id="timeFieldStep" style="width:100%;margin-top:6px;">
+              <option value="2">Dense</option>
+              <option value="3" selected>Medium</option>
+              <option value="4">Sparse</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div>
+            <label class="small">Time-field mode</label>
+            <select id="timeFieldMode" style="width:100%;margin-top:6px;">
+              <option value="canonical">Canonical TOL field</option>
+              <option value="sbia_gated" selected>SBIA-gated TOL field</option>
+            </select>
+          </div>
+          <div>
+            <label class="small">Activation style</label>
+            <select id="timeFieldActivation" style="width:100%;margin-top:6px;">
+              <option value="binary">Binary gate</option>
+              <option value="smooth" selected>Smooth gate</option>
+            </select>
+          </div>
+        </div>
+        <div class="row2">
+          <div>
+            <label class="small">Information-flow overlay</label>
+            <select id="showInfoFlow" style="width:100%;margin-top:6px;">
+              <option value="off">Off</option>
+              <option value="on" selected>On</option>
+            </select>
+          </div>
+          <div>
+            <label class="small">Info-flow mode</label>
+            <select id="infoFlowMode" style="width:100%;margin-top:6px;">
+              <option value="density_gradient" selected>−∇ρ</option>
+              <option value="gated_density_gradient">SBIA-gated −∇ρ</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="equation-box">
+          <div id="equationTitle" style="font-weight:700;"></div>
+          <p id="equationText" class="muted" style="margin-top:8px;"></p>
+          <code id="equationCode"></code>
+        </div>
+
+        <details class="mode-box" open>
+          <summary style="font-weight:700;cursor:pointer;">Quantule detection</summary>
+          <p class="muted" style="margin-top:8px;">
+            Detected quantules are defined here as local maxima above a chosen density threshold that persist for several frames.
+            This is a reduced IQL-style behavioral detector, not yet a full manuscript classifier.
+          </p>
+          <div class="row2" style="margin-top:12px;">
+            <div>
+              <label class="small">Quantule threshold</label>
+              <select id="quantuleThreshold" style="width:100%;margin-top:6px;">
+                <option value="0.8">0.80</option>
+                <option value="0.9" selected>0.90</option>
+                <option value="1.0">1.00</option>
+                <option value="1.2">1.20</option>
+              </select>
+            </div>
+            <div>
+              <label class="small">Persistence frames</label>
+              <select id="quantulePersistence" style="width:100%;margin-top:6px;">
+                <option value="2">2</option>
+                <option value="3" selected>3</option>
+                <option value="4">4</option>
+                <option value="5">5</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div class="mode-box">
+          <div style="font-weight:700;">Identity / structure-family panel</div>
+          <p class="muted" style="margin-top:8px;">
+            Persistent quantule-like structures are grouped into recurring families using simple measurable features:
+            peak density, persistence, compactness, local symmetry, and local flow/time intensity. This is a reduced
+            ICE / IDL-style behavioral panel, not yet a final formal identity classifier.
+          </p>
+          <div class="row2" style="margin-top:12px;">
+            <div>
+              <label class="small">Family classifier</label>
+              <select id="familyClassifier" style="width:100%;margin-top:6px;">
+                <option value="balanced" selected>Balanced</option>
+                <option value="compact_bias">Compact-core bias</option>
+                <option value="persistence_bias">Persistence bias</option>
+              </select>
+            </div>
+            <div>
+              <label class="small">Identity display</label>
+              <select id="showFamilies" style="width:100%;margin-top:6px;">
+                <option value="on" selected>On</option>
+                <option value="off">Off</option>
+              </select>
+            </div>
+          </div>
+        </details>
+
+        <details class="mode-box">
+          <summary style="font-weight:700;cursor:pointer;">Advanced parameter controls</summary>
+          <p class="muted" style="margin-top:8px;">These controls are mainly for deeper appendix exploration. The default preset is the recommended reader-facing configuration.</p>
+          <div class="controls-grid" id="controls"></div>
+        </details>
+      </section>
+
+      <section class="card">
+        <div class="right-head">
+          <div>
+            <h2>Interactive field view</h2>
+            <p class="muted" style="margin-top:8px;max-width:650px;">
+              Blue and orange show field intensity and ignition. Green overlays show candidate quantules that persist.
+              In reinitiation mode, the run passes through emergence, decay, then restart.
+            </p>
+          </div>
+        </div>
+
+        <div class="field-shell">
+          <div style="position:relative;">
+            <div id="field2d" class="field" style="display:none;position:relative;z-index:1;"></div>
+            <svg id="timeField2d" style="display:none;position:absolute;inset:0;z-index:2;pointer-events:none;"></svg>
+            <svg id="infoFlow2d" style="display:none;position:absolute;inset:0;z-index:3;pointer-events:none;"></svg>
+          </div>
+          <div id="field3dWrap" class="field3d-wrap" style="position:relative;">
+            <div id="field3d" class="field3d" style="position:relative;z-index:1;"></div>
+            <svg id="timeField3d" style="position:absolute;inset:0;z-index:2;pointer-events:none;"></svg>
+            <svg id="infoFlow3d" style="position:absolute;inset:0;z-index:3;pointer-events:none;"></svg>
+          </div>
+        </div>
+
+        <div class="actionrow" style="margin-top:14px;">
+          <button id="playBtn">Pause</button>
+          <button id="resetBtn">Reset frame</button>
+          <button id="presetC" style="display:none;">Recommended view</button>
+        </div>
+        <p class="muted small" style="margin-top:10px;">Default view shows the recommended appendix configuration. Pause the run and drag the frame slider if you want to inspect a specific stage.</p>
+
+        <div style="margin-top:12px;">
+          <input id="frameSlider" type="range" min="0" max="0" value="0" style="width:100%;" />
+        </div>
+
+        <div class="metrics">
+          <div class="metric"><div class="t">Current frame</div><div class="v" id="mFrame">0/0</div><div class="s">Animated evolution index</div></div>
+          <div class="metric"><div class="t">Peak ρ</div><div class="v" id="mPeak">0.00</div><div class="s">Maximum local density</div></div>
+          <div class="metric"><div class="t">Mean ρ</div><div class="v" id="mMean">0.00</div><div class="s">Average density over the field</div></div>
+          <div class="metric"><div class="t">Ignited area</div><div class="v" id="mIgnited">0%</div><div class="s">Fraction of active cells</div></div>
+          <div class="metric"><div class="t">Ignition frame</div><div class="v" id="mIgnitionFrame">—</div><div class="s" id="mIgnitionText">No ignition detected yet</div></div>
+          <div class="metric"><div class="t">Ignition status</div><div class="v" id="mIgnitionStatus">Silent</div><div class="s">Detected from ignited-area threshold</div></div>
+          <div class="metric"><div class="t">Detected quantules</div><div class="v" id="mQuantules">0</div><div class="s">Persistent local peaks detected</div></div>
+          <div class="metric"><div class="t">Lifecycle phase</div><div class="v" id="mPhase">Emergence</div><div class="s">Normal / decay / restart</div></div>
+          <div class="metric"><div class="t">Peak / ρ_real</div><div class="v" id="mPeakReal">0.00</div><div class="s">Normalized manuscript comparison</div></div>
+          <div class="metric"><div class="t">Interaction class</div><div class="v" id="mInteract">—</div><div class="s">Merge / coexist / repel / unclear</div></div>
+          <div class="metric"><div class="t">Pair separation</div><div class="v" id="mDistance">—</div><div class="s">Peak-to-peak separation</div></div>
+          <div class="metric"><div class="t">Dominant family</div><div class="v" id="mFamily">—</div><div class="s">Most common quantule family</div></div>
+          <div class="metric"><div class="t">Family diversity</div><div class="v" id="mFamilyCount">0</div><div class="s">Distinct families in current frame</div></div>
+          <div class="metric"><div class="t">Time-field active</div><div class="v" id="mTimeActive">0%</div><div class="s">Cells with visible manuscript time flow</div></div>
+          <div class="metric"><div class="t">Frozen zones</div><div class="v" id="mFrozen">0%</div><div class="s">Cells with near-zero or hidden time flow</div></div>
+          <div class="metric"><div class="t">Info-flow active</div><div class="v" id="mFlowActive">0%</div><div class="s">Cells with visible IQD flow</div></div>
+          <div class="metric"><div class="t">Flow–time alignment</div><div class="v" id="mAlignment">0%</div><div class="s">Cosine alignment where both fields are active</div></div>
+        </div>
+      </section>
+    </div>
+
+    <section class="card summary">
+      <h2>Appendix run summary</h2>
+      <div class="summary-grid">
+        <div class="metric"><div class="t">Final peak</div><div class="v" id="sPeak">0.00</div><div class="s">End-of-run density maximum</div></div>
+        <div class="metric"><div class="t">Final mean</div><div class="v" id="sMean">0.00</div><div class="s">End-of-run average density</div></div>
+        <div class="metric"><div class="t">Final ignited area</div><div class="v" id="sIgnited">0%</div><div class="s">End-of-run activated region</div></div>
+        <div class="metric"><div class="t">Detected ignition</div><div class="v" id="sIgnition">—</div><div class="s">First frame above activation threshold</div></div>
+        <div class="metric"><div class="t">Max quantule count</div><div class="v" id="sQuantules">0</div><div class="s">Largest persistent count across run</div></div>
+        <div class="metric"><div class="t">Reinitiation detected</div><div class="v" id="sReinit">No</div><div class="s">Second ignition after decay</div></div>
+        <div class="metric"><div class="t">Threshold / S_crit</div><div class="v" id="sThreshold">0.00</div><div class="s">Normalized threshold level</div></div>
+        <div class="metric"><div class="t">Estimated ignition time</div><div class="v" id="sIgniteTime">—</div><div class="s">Reference-mapped only in normalized mode</div></div>
+        <div class="metric"><div class="t">Best interaction mode</div><div class="v" id="sInteract">—</div><div class="s">End-of-run dual-seed behavior</div></div>
+        <div class="metric"><div class="t">Interaction distance</div><div class="v" id="sDistance">—</div><div class="s">Final peak-to-peak separation</div></div>
+        <div class="metric"><div class="t">Dominant family</div><div class="v" id="sFamily">—</div><div class="s">Dominant family across run</div></div>
+        <div class="metric"><div class="t">Family diversity</div><div class="v" id="sFamilyDiversity">0</div><div class="s">Number of family types observed</div></div>
+        <div class="metric"><div class="t">Max time-active area</div><div class="v" id="sTimeActive">0%</div><div class="s">Largest active temporal-flow region</div></div>
+        <div class="metric"><div class="t">Min frozen area</div><div class="v" id="sFrozen">0%</div><div class="s">Smallest frozen-zone fraction</div></div>
+        <div class="metric"><div class="t">Max info-flow area</div><div class="v" id="sFlowActive">0%</div><div class="s">Largest visible IQD-flow region</div></div>
+        <div class="metric"><div class="t">Best flow–time alignment</div><div class="v" id="sAlignment">0%</div><div class="s">Highest run-average cosine alignment</div></div>
+      </div>
+
+      <div class="mode-box" style="margin-top:18px;">
+        <div style="font-weight:700;">Structure-family distribution</div>
+        <div class="row2" style="margin-top:12px;">
+          <div class="metric"><div class="t">Compact cores</div><div class="v" id="famCompact">0</div><div class="s">Dense, small, stable</div></div>
+          <div class="metric"><div class="t">Diffuse blobs</div><div class="v" id="famDiffuse">0</div><div class="s">Broader, lower contrast</div></div>
+          <div class="metric"><div class="t">Ridges</div><div class="v" id="famRidge">0</div><div class="s">Elongated / anisotropic</div></div>
+          <div class="metric"><div class="t">Anchors</div><div class="v" id="famAnchor">0</div><div class="s">Stable with stronger local flow</div></div>
+          <div class="metric"><div class="t">Transients</div><div class="v" id="famTransient">0</div><div class="s">Weak persistence</div></div>
+          <div class="metric"><div class="t">Hybrid</div><div class="v" id="famHybrid">0</div><div class="s">Mixed signature</div></div>
+        </div>
+      </div>
+
+      <div class="note">
+        <strong>How to read this:</strong> PIF-a should remain smoother. PIF-b should show stronger nonlinear clustering.
+        PIF-c should show the richest structured response. In reinitiation mode, a good REL-style run shows emergence,
+        partial decay, then renewed activation. Detected quantules should appear as persistent local maxima rather than transient spikes.
+        The family panel tells you whether these structures repeatedly separate into recognizable identity-like groups. For monograph use, the most informative default view is PIF-c with the anisotropic field and the balanced family classifier. This interactive link should therefore be cited in the appendix as a reader-oriented behavioral companion rather than as an independent quantitative validation instrument.
+      </div>
+    </section>
+  </div>
+
+  <script>
+    const state = {
+      mode: "pif-c",
+      fieldMode: "anisotropic",
+      viewMode: "3d",
+      runMode: "normal",
+      normalizedManuscriptMode: true,
+      size: 19,
+      steps: 70,
+      rho0: 0.85,
+      threshold: 1.0,
+      N: 0.24,
+      eta: 0.72,
+      lambda1: 1.15,
+      mu: 0.68,
+      nu: 0.20,
+      betaS: 1.05,
+      Sent: 0.75,
+      U: 0.14,
+      diffusionStrength: 0.09,
+      playing: true,
+      frameIndex: 0,
+      frames: [],
+      quantuleThreshold: 0.9,
+      quantulePersistenceFrames: 3,
+      showTimeField: true,
+      timeFieldStep: 3,
+      timeFieldMode: "sbia_gated",
+      timeFieldActivation: "smooth",
+      showInfoFlow: true,
+      infoFlowMode: "density_gradient"
+    };
+
+    const controlDefs = [
+      ["rho0","Initial density ρ₀",0.05,1.5,0.01],
+      ["threshold","SBIA threshold",0.05,1.5,0.01],
+      ["diffusionStrength","Diffusion",0.01,0.5,0.01],
+      ["N","N",0,1.5,0.01],
+      ["eta","η",0.05,1.5,0.01],
+      ["lambda1","λ",0,1.5,0.01],
+      ["mu","μ",0,1.5,0.01],
+      ["nu","ν",0,0.6,0.01],
+      ["betaS","βₛ",0,1.5,0.01],
+      ["Sent","S_ent",0,1.5,0.01],
+      ["U","U / V scale",0,0.8,0.01],
+      ["steps","Steps",20,120,1]
+    ];
+
+    function clamp(v,min,max){ return Math.max(min,Math.min(max,v)); }
+    function fmt(v,d=2){ return Number(v).toFixed(d); }
+
+    function buildControls(){
+      const root = document.getElementById("controls");
+      root.innerHTML = "";
+      controlDefs.forEach(([key,label,min,max,step])=>{
+        const div = document.createElement("div");
+        div.className = "control";
+        div.innerHTML = `
+          <div class="control-head">
+            <span>${label}</span>
+            <span class="pill" id="pill-${key}">${fmt(state[key], step >= 1 ? 0 : 2)}</span>
+          </div>
+          <input id="input-${key}" type="range" min="${min}" max="${max}" step="${step}" value="${state[key]}" />
+        `;
+        root.appendChild(div);
+        const input = div.querySelector("input");
+        input.addEventListener("input", (e)=>{
+          state[key] = Number(e.target.value);
+          document.getElementById(`pill-${key}`).textContent = fmt(state[key], step >= 1 ? 0 : 2);
+          recompute();
+        });
+      });
+    }
+
+    function buildEntropyField(size, fieldMode){
+      const center = (size - 1) / 2;
+      return Array.from({length:size}, (_,y)=>
+        Array.from({length:size}, (_,x)=>{
+          const dx = (x-center)/center;
+          const dy = (y-center)/center;
+          const r2 = dx*dx + dy*dy;
+          const core = Math.exp(-3.4*r2);
+          const lobe = Math.exp(-8*((dx-0.25)**2 + (dy+0.18)**2));
+          const ridge = 0.45*(Math.cos(dx*Math.PI*2.2)+1)*Math.exp(-2.6*dy*dy);
+          let s = 0.58*core + 0.22*lobe + 0.2*ridge;
+          if(fieldMode === "anisotropic"){
+            s *= 0.8 + 0.2 * Math.cos(Math.atan2(dy,dx)*3);
+          }
+          return clamp(s,0,1.4);
+        })
+      );
+    }
+
+    function gradientMagnitude(field, x, y){
+      const h = field.length, w = field[0].length;
+      const left = field[y][Math.max(0,x-1)];
+      const right = field[y][Math.min(w-1,x+1)];
+      const up = field[Math.max(0,y-1)][x];
+      const down = field[Math.min(h-1,y+1)][x];
+      const gx = (right-left)*0.5;
+      const gy = (down-up)*0.5;
+      return Math.sqrt(gx*gx + gy*gy);
+    }
+
+    function divergenceVelocity(field, x, y){
+      const h = field.length, w = field[0].length;
+      const left = field[y][Math.max(0,x-1)];
+      const right = field[y][Math.min(w-1,x+1)];
+      const up = field[Math.max(0,y-1)][x];
+      const down = field[Math.min(h-1,y+1)][x];
+      return (right+left+up+down-4*field[y][x]) * 0.5;
+    }
+
+
+
+
+    function curvatureTimeVector(entropyField, x, y){
+      const h = entropyField.length, w = entropyField[0].length;
+      const s0 = entropyField[y][x];
+      const sxp = entropyField[y][Math.min(w-1, x+1)];
+      const sxm = entropyField[y][Math.max(0, x-1)];
+      const syp = entropyField[Math.min(h-1, y+1)][x];
+      const sym = entropyField[Math.max(0, y-1)][x];
+
+      const dxx = sxp - 2*s0 + sxm;
+      const dyy = syp - 2*s0 + sym;
+
+      const sxy1 = entropyField[Math.min(h-1, y+1)][Math.min(w-1, x+1)];
+      const sxy2 = entropyField[Math.min(h-1, y+1)][Math.max(0, x-1)];
+      const sxy3 = entropyField[Math.max(0, y-1)][Math.min(w-1, x+1)];
+      const sxy4 = entropyField[Math.max(0, y-1)][Math.max(0, x-1)];
+      const dxy = (sxy1 - sxy2 - sxy3 + sxy4) * 0.25;
+
+      // Manuscript-faithful surrogate for T_info anchored to entropy curvature.
+      // We keep direction tied to curvature geometry rather than arbitrary frame animation.
+      const tx = dxx + dxy;
+      const ty = dyy + dxy;
+      const mag = Math.sqrt(tx*tx + ty*ty);
+      return {tx, ty, mag};
+    }
+
+    function sbiaActivationFactor(gradS, threshold, rho, ignited){
+      if(state.timeFieldMode === "canonical"){
+        return 1.0;
+      }
+
+      if(state.timeFieldActivation === "binary"){
+        return gradS >= threshold ? 1.0 : 0.0;
+      }
+
+      // Smooth activation: zero below threshold neighborhood, rising above it and strengthened by local emergence.
+      const gradTerm = Math.max(0, gradS / Math.max(threshold, 1e-6) - 0.85) / 0.35;
+      const rhoTerm = Math.max(0, rho / 0.9 - 0.6) / 0.6;
+      const base = Math.min(1, Math.max(0, 0.75*gradTerm + 0.25*rhoTerm));
+      return ignited ? Math.max(base, 0.9) : base;
+    }
+
+    function drawTimeField(svgEl, current, width, height, is3d){
+      if(!state.showTimeField){
+        svgEl.innerHTML = "";
+        svgEl.style.display = "none";
+        return;
+      }
+      svgEl.style.display = "block";
+      svgEl.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svgEl.innerHTML = "";
+      const ns = "http://www.w3.org/2000/svg";
+      const step = state.timeFieldStep;
+      const cellW = width / state.size;
+      const cellH = height / state.size;
+      const arrowScale = is3d ? 0.30 : 0.42;
+
+      current.cells.forEach(cell => {
+        if(cell.x % step !== 0 || cell.y % step !== 0) return;
+        const tf = current.timeFieldMap[`${cell.x},${cell.y}`];
+        if(!tf) return;
+        if(tf.visible <= 0.02) return;
+
+        const cx = (cell.x + 0.5) * cellW;
+        const cy = (cell.y + 0.5) * cellH;
+
+        const norm = tf.mag > 0 ? 1 / tf.mag : 0;
+        const ux = tf.tx * norm;
+        const uy = tf.ty * norm;
+
+        const len = Math.min(cellW, cellH) * (0.45 + Math.min(tf.magNorm, 1.2) * arrowScale) * tf.visible;
+        const x2 = cx + ux * len;
+        const y2 = cy + uy * len;
+
+        const activeStroke = `rgba(147,51,234,${(0.25 + 0.75*tf.visible).toFixed(3)})`;
+        const frozenStroke = `rgba(148,163,184,${(0.18 + 0.30*tf.visible).toFixed(3)})`;
+        const stroke = tf.visible >= 0.15 ? activeStroke : frozenStroke;
+
+        const line = document.createElementNS(ns, "line");
+        line.setAttribute("x1", cx.toFixed(2));
+        line.setAttribute("y1", cy.toFixed(2));
+        line.setAttribute("x2", x2.toFixed(2));
+        line.setAttribute("y2", y2.toFixed(2));
+        line.setAttribute("stroke", stroke);
+        line.setAttribute("stroke-width", tf.visible >= 0.15 ? "2.2" : "1.1");
+        svgEl.appendChild(line);
+
+        const angle = Math.atan2(uy, ux);
+        const ah = 5.5;
+        const a1x = x2 - ah * Math.cos(angle - Math.PI / 6);
+        const a1y = y2 - ah * Math.sin(angle - Math.PI / 6);
+        const a2x = x2 - ah * Math.cos(angle + Math.PI / 6);
+        const a2y = y2 - ah * Math.sin(angle + Math.PI / 6);
+
+        const poly = document.createElementNS(ns, "polygon");
+        poly.setAttribute("points", `${x2.toFixed(2)},${y2.toFixed(2)} ${a1x.toFixed(2)},${a1y.toFixed(2)} ${a2x.toFixed(2)},${a2y.toFixed(2)}`);
+        poly.setAttribute("fill", stroke);
+        svgEl.appendChild(poly);
+      });
+    }
+
+
+    function infoFlowVector(rhoGrid, x, y){
+      const h = rhoGrid.length, w = rhoGrid[0].length;
+      const left = rhoGrid[y][Math.max(0,x-1)];
+      const right = rhoGrid[y][Math.min(w-1,x+1)];
+      const up = rhoGrid[Math.max(0,y-1)][x];
+      const down = rhoGrid[Math.min(h-1,y+1)][x];
+      const gx = (right-left) * 0.5;
+      const gy = (down-up) * 0.5;
+      const jx = -gx;
+      const jy = -gy;
+      const mag = Math.sqrt(jx*jx + jy*jy);
+      return {jx, jy, mag};
+    }
+
+    function flowActivationFactor(gradS, threshold, rho){
+      if(state.infoFlowMode === "density_gradient"){
+        return 1.0;
+      }
+      const gradTerm = Math.max(0, gradS / Math.max(threshold, 1e-6) - 0.85) / 0.35;
+      const rhoTerm = Math.max(0, rho / 0.9 - 0.6) / 0.6;
+      return Math.min(1, Math.max(0, 0.7*gradTerm + 0.3*rhoTerm));
+    }
+
+    function drawInfoFlow(svgEl, current, width, height, is3d){
+      if(!state.showInfoFlow){
+        svgEl.innerHTML = "";
+        svgEl.style.display = "none";
+        return;
+      }
+      svgEl.style.display = "block";
+      svgEl.setAttribute("viewBox", `0 0 ${width} ${height}`);
+      svgEl.innerHTML = "";
+      const ns = "http://www.w3.org/2000/svg";
+      const step = state.timeFieldStep;
+      const cellW = width / state.size;
+      const cellH = height / state.size;
+      const arrowScale = is3d ? 0.28 : 0.38;
+
+      current.cells.forEach(cell => {
+        if(cell.x % step !== 0 || cell.y % step !== 0) return;
+        const fl = current.flowFieldMap[`${cell.x},${cell.y}`];
+        if(!fl || fl.visible <= 0.02) return;
+
+        const cx = (cell.x + 0.5) * cellW;
+        const cy = (cell.y + 0.5) * cellH;
+        const norm = fl.mag > 0 ? 1 / fl.mag : 0;
+        const ux = fl.jx * norm;
+        const uy = fl.jy * norm;
+        const len = Math.min(cellW, cellH) * (0.40 + Math.min(fl.magNorm, 1.2) * arrowScale) * fl.visible;
+        const x2 = cx + ux * len;
+        const y2 = cy + uy * len;
+
+        const stroke = `rgba(34,197,94,${(0.22 + 0.75*fl.visible).toFixed(3)})`;
+
+        const line = document.createElementNS(ns, "line");
+        line.setAttribute("x1", cx.toFixed(2));
+        line.setAttribute("y1", cy.toFixed(2));
+        line.setAttribute("x2", x2.toFixed(2));
+        line.setAttribute("y2", y2.toFixed(2));
+        line.setAttribute("stroke", stroke);
+        line.setAttribute("stroke-width", fl.visible >= 0.15 ? "2.0" : "1.0");
+        svgEl.appendChild(line);
+
+        const angle = Math.atan2(uy, ux);
+        const ah = 5;
+        const a1x = x2 - ah * Math.cos(angle - Math.PI / 6);
+        const a1y = y2 - ah * Math.sin(angle - Math.PI / 6);
+        const a2x = x2 - ah * Math.cos(angle + Math.PI / 6);
+        const a2y = y2 - ah * Math.sin(angle + Math.PI / 6);
+
+        const poly = document.createElementNS(ns, "polygon");
+        poly.setAttribute("points", `${x2.toFixed(2)},${y2.toFixed(2)} ${a1x.toFixed(2)},${a1y.toFixed(2)} ${a2x.toFixed(2)},${a2y.toFixed(2)}`);
+        poly.setAttribute("fill", stroke);
+        svgEl.appendChild(poly);
+      });
+    }
+
+    function isLocalPeak(grid, x, y){
+      const val = grid[y][x];
+      for(let dy=-1; dy<=1; dy++){
+        for(let dx=-1; dx<=1; dx++){
+          if(dx===0 && dy===0) continue;
+          const nx = x + dx, ny = y + dy;
+          if(grid[ny] && grid[ny][nx] !== undefined){
+            if(grid[ny][nx] > val) return false;
+          }
+        }
+      }
+      return true;
+    }
+
+
+
+    function localNeighborhoodStats(grid, x, y){
+      const vals = [];
+      for(let dy=-1; dy<=1; dy++){
+        for(let dx=-1; dx<=1; dx++){
+          const ny = y + dy, nx = x + dx;
+          if(grid[ny] && grid[ny][nx] !== undefined){
+            vals.push(grid[ny][nx]);
+          }
+        }
+      }
+      const mean = vals.reduce((a,b)=>a+b,0) / Math.max(vals.length,1);
+      const varr = vals.reduce((a,b)=>a + (b-mean)*(b-mean), 0) / Math.max(vals.length,1);
+      return {mean, std: Math.sqrt(varr)};
+    }
+
+    function localAnisotropy(grid, x, y){
+      const left = (grid[y] && grid[y][Math.max(0,x-1)]) ?? grid[y][x];
+      const right = (grid[y] && grid[y][Math.min(grid[0].length-1,x+1)]) ?? grid[y][x];
+      const up = (grid[Math.max(0,y-1)] && grid[Math.max(0,y-1)][x]) ?? grid[y][x];
+      const down = (grid[Math.min(grid.length-1,y+1)] && grid[Math.min(grid.length-1,y+1)][x]) ?? grid[y][x];
+      const horiz = Math.abs(right - left);
+      const vert = Math.abs(down - up);
+      return Math.abs(horiz - vert) / Math.max(horiz + vert, 1e-9);
+    }
+
+    function classifyFamily(features){
+      const mode = state.familyClassifier;
+      const compact = features.peak >= 1.6 && features.std >= 0.20 && features.anisotropy < 0.22 && features.persistence >= state.quantulePersistenceFrames;
+      const diffuse = features.peak < 1.35 && features.std < 0.18;
+      const ridge = features.anisotropy >= 0.25;
+      const anchor = features.persistence >= state.quantulePersistenceFrames + 1 && features.flow >= 0.15 && features.time >= 0.10;
+      const transient = features.persistence <= 2;
+
+      if(mode === "compact_bias"){
+        if(compact) return "Compact core";
+        if(anchor) return "Anchor";
+        if(ridge) return "Ridge";
+        if(diffuse) return "Diffuse blob";
+        if(transient) return "Transient";
+        return "Hybrid";
+      }
+
+      if(mode === "persistence_bias"){
+        if(anchor) return "Anchor";
+        if(compact) return "Compact core";
+        if(transient) return "Transient";
+        if(ridge) return "Ridge";
+        if(diffuse) return "Diffuse blob";
+        return "Hybrid";
+      }
+
+      // balanced
+      if(anchor) return "Anchor";
+      if(compact) return "Compact core";
+      if(ridge) return "Ridge";
+      if(diffuse) return "Diffuse blob";
+      if(transient) return "Transient";
+      return "Hybrid";
+    }
+
+    function familyColor(name){
+      return {
+        "Compact core": "rgba(34,197,94,0.92)",
+        "Diffuse blob": "rgba(59,130,246,0.88)",
+        "Ridge": "rgba(147,51,234,0.90)",
+        "Anchor": "rgba(249,115,22,0.92)",
+        "Transient": "rgba(148,163,184,0.82)",
+        "Hybrid": "rgba(236,72,153,0.90)"
+      }[name] || "rgba(34,197,94,0.92)";
+    }
+
+
+    function simulateFrames(){
+      const { mode,size,steps,rho0,threshold,fieldMode,N,eta,lambda1,mu,nu,betaS,Sent,U,diffusionStrength,runMode,quantuleThreshold,quantulePersistenceFrames,seedSeparation,seedStrength,repulsionStrength,bridgeStrength } = state;
+      const entropyField = buildEntropyField(size, fieldMode);
+      const center = (size - 1) / 2;
+
+      let rho = Array.from({length:size}, (_,y)=>
+        Array.from({length:size}, (_,x)=>{
+          const dx = (x-center)/center;
+          const dy = (y-center)/center;
+          let seed = 0;
+
+          if(runMode === "interaction"){
+            const s1x = -seedSeparation;
+            const s2x = seedSeparation;
+            const s1 = Math.exp(-18 * ((dx - s1x)**2 + (dy)**2));
+            const s2 = Math.exp(-18 * ((dx - s2x)**2 + (dy)**2)) * seedStrength;
+            seed = 0.75 * s1 + 0.75 * s2;
+          } else {
+            seed = Math.exp(-5*(dx*dx+dy*dy));
+          }
+
+          return clamp(rho0*(0.6*seed + 0.4*entropyField[y][x]), 0, 2.6);
+        })
+      );
+
+      const frames = [];
+      const persistenceMap = {};
+      let maxQuantules = 0;
+      let ignitionHappened = false;
+      let reinitDetected = false;
+      let postDecaySilence = false;
+
+      const runFamilyTotals = {
+        "Compact core":0, "Diffuse blob":0, "Ridge":0, "Anchor":0, "Transient":0, "Hybrid":0
+      };
+
+      for(let step=0; step<steps; step++){
+        const next = rho.map(row=>[...row]);
+        let peak = 0, sum = 0, ignitedCount = 0, quantuleCount = 0;
+        let phase = "Emergence";
+
+        if(runMode === "reinitiation"){
+          if(step < Math.floor(steps*0.35)) phase = "Emergence";
+          else if(step < Math.floor(steps*0.65)) phase = "Decay";
+          else phase = "Restart";
+        } else if(runMode === "interaction"){
+          phase = "Interaction";
+        }
+
+        for(let y=0; y<size; y++){
+          for(let x=0; x<size; x++){
+            const r = rho[y][x];
+            const up = rho[Math.max(0,y-1)][x];
+            const down = rho[Math.min(size-1,y+1)][x];
+            const left = rho[y][Math.max(0,x-1)];
+            const right = rho[y][Math.min(size-1,x+1)];
+            const laplacian = up + down + left + right - 4*r;
+
+            const gradS = gradientMagnitude(entropyField, x, y);
+            const divV = divergenceVelocity(entropyField, x, y);
+            const gate = gradS >= threshold ? 1 : 0;
+            const wave = 0.02 * Math.sin(step * 0.3 + x * 0.25 + y * 0.17);
+
+            let drho = 0;
+            if(mode === "pif-a"){
+              drho = (diffusionStrength*laplacian + gate*Sent*divV + U*r - N*r + wave) / Math.max(eta,0.001);
+            } else if(mode === "pif-b"){
+              const vunified = U*r + 0.12*gradS;
+              drho = (diffusionStrength*laplacian + gate*Sent*divV + gate*vunified + lambda1*r*r - mu*r*r*r + wave) / Math.max(eta,0.001);
+            } else {
+              const vunified = U*r + 0.08*entropyField[y][x] + 0.015*step;
+              drho = gate*lambda1*r - mu*r*r + nu*r*r*r + gate*betaS*gradS + gate*Sent*divV + gate*vunified + diffusionStrength*laplacian + wave - 0.08*r;
+            }
+
+            if(runMode === "reinitiation"){
+              if(phase === "Decay"){
+                drho -= 0.35 * r;
+                drho -= 0.10;
+              } else if(phase === "Restart"){
+                const pulse = 0.18 * Math.exp(-((((x-center)/center)**2 + ((y-center)/center)**2)*2.5));
+                drho += pulse;
+                drho += 0.08 * Math.random();
+              }
+            }
+
+            if(runMode === "interaction"){
+              const dxn = (x-center)/center;
+              const dyn = (y-center)/center;
+
+              const s1x = -seedSeparation;
+              const s2x = seedSeparation;
+              const d1 = Math.sqrt((dxn - s1x)*(dxn - s1x) + dyn*dyn);
+              const d2 = Math.sqrt((dxn - s2x)*(dxn - s2x) + dyn*dyn);
+
+              const interactionWell = 0.04 * Math.exp(-4.5*(dxn*dxn + dyn*dyn));
+              const bridge = bridgeStrength * Math.exp(-28*(dyn*dyn)) * Math.exp(-4*(dxn*dxn));
+              const overlap = Math.exp(-10*(d1*d1 + d2*d2));
+              const corridor = Math.exp(-24*(dyn*dyn)) * Math.exp(-2.5*(dxn*dxn));
+              const repulsion = repulsionStrength * (0.8*overlap + 0.2*corridor);
+
+              drho += interactionWell + bridge;
+              drho -= repulsion * (0.6 + 0.4*r);
+            }
+
+            const updated = clamp(r + 0.20*drho, 0, 2.8);
+            next[y][x] = updated;
+            if(updated > peak) peak = updated;
+            sum += updated;
+            if(gradS >= threshold && updated > 0.9) ignitedCount++;
+          }
+        }
+
+        rho = next;
+        const cells = [];
+        let familyCounts = { "Compact core":0, "Diffuse blob":0, "Ridge":0, "Anchor":0, "Transient":0, "Hybrid":0 };
+        let peaks = [];
+
+        for(let y=0; y<size; y++){
+          for(let x=0; x<size; x++){
+            const gradS = gradientMagnitude(entropyField, x, y);
+            const ignited = gradS >= threshold && rho[y][x] > 0.9;
+
+            const peakKey = `${x},${y}`;
+            let quantule = false;
+            let family = null;
+
+            if(rho[y][x] > quantuleThreshold && isLocalPeak(rho, x, y)){
+              persistenceMap[peakKey] = (persistenceMap[peakKey] || 0) + 1;
+
+              if(persistenceMap[peakKey] >= quantulePersistenceFrames){
+                quantule = true;
+                quantuleCount++;
+
+                const stats = localNeighborhoodStats(rho, x, y);
+                const anis = localAnisotropy(rho, x, y);
+                const left = rho[y][Math.max(0,x-1)], right = rho[y][Math.min(size-1,x+1)];
+                const up = rho[Math.max(0,y-1)][x], down = rho[Math.min(size-1,y+1)][x];
+                const flow = Math.sqrt(((right-left)*0.5)**2 + ((down-up)*0.5)**2);
+                const time = gradS;
+
+                family = classifyFamily({
+                  peak: rho[y][x],
+                  std: stats.std,
+                  anisotropy: anis,
+                  persistence: persistenceMap[peakKey],
+                  flow,
+                  time
+                });
+
+                familyCounts[family] += 1;
+                runFamilyTotals[family] += 1;
+                peaks.push({x, y, rho: rho[y][x], family});
+              }
+            } else {
+              persistenceMap[peakKey] = 0;
+            }
+
+            cells.push({x,y,rho:rho[y][x], ignited, quantule, family});
+          }
+        }
+
+        peaks.sort((a,b) => b.rho - a.rho);
+        peaks = peaks.slice(0,2);
+
+        let pairDistance = null;
+        let interactionState = "—";
+        if(runMode === "interaction"){
+          if(peaks.length >= 2){
+            const dx = peaks[0].x - peaks[1].x;
+            const dy = peaks[0].y - peaks[1].y;
+            pairDistance = Math.sqrt(dx*dx + dy*dy) / size;
+            if(pairDistance < 0.10) interactionState = "Merged";
+            else if(pairDistance < 0.20) interactionState = "Bound pair";
+            else if(pairDistance < 0.34) interactionState = "Coexist";
+            else interactionState = "Repelled";
+          } else if(peaks.length === 1){
+            pairDistance = 0;
+            interactionState = "Merged";
+          } else {
+            interactionState = "Collapsed";
+          }
+        }
+
+        const famEntries = Object.entries(familyCounts).sort((a,b)=>b[1]-a[1]);
+        const dominantFamily = famEntries[0] && famEntries[0][1] > 0 ? famEntries[0][0] : "—";
+        const familyDiversity = famEntries.filter(([_,v])=>v>0).length;
+
+        const ignitedFraction = ignitedCount/(size*size);
+        if(ignitedFraction >= 0.03) ignitionHappened = true;
+        if(runMode === "reinitiation" && ignitionHappened && phase === "Decay" && ignitedFraction < 0.01) postDecaySilence = true;
+        if(runMode === "reinitiation" && postDecaySilence && phase === "Restart" && ignitedFraction >= 0.03) reinitDetected = true;
+        if(quantuleCount > maxQuantules) maxQuantules = quantuleCount;
+
+        frames.push({
+          frame: step,
+          cells,
+          peak,
+          mean: sum/(size*size),
+          ignitedFraction,
+          quantuleCount,
+          phase,
+          pairDistance,
+          interactionState,
+          dominantFamily,
+          familyDiversity,
+          familyCounts
+        });
+      }
+
+      const totalEntries = Object.entries(runFamilyTotals).sort((a,b)=>b[1]-a[1]);
+      frames.topFamily = totalEntries[0] && totalEntries[0][1] > 0 ? totalEntries[0][0] : "—";
+      frames.familyDiversity = totalEntries.filter(([_,v])=>v>0).length;
+      frames.familyTotals = runFamilyTotals;
+      frames.maxQuantules = maxQuantules;
+      frames.reinitDetected = reinitDetected;
+      return frames;
+    }
+    function updateEquationText(){
+      const title = document.getElementById("equationTitle");
+      const text = document.getElementById("equationText");
+      const code = document.getElementById("equationCode");
+      if(state.mode === "pif-a"){
+        title.textContent = "PIF-a · Linear / expository";
+        text.textContent = "Baseline regime: propagation, entropy forcing, and minimal potential without higher-order feedback.";
+        code.textContent = "□ρ + Nρ + η ∂ρ/∂t = S_ent ∇·v + Uρ";
+      } else if(state.mode === "pif-b"){
+        title.textContent = "PIF-b · Nonlinear canonical PDE";
+        text.textContent = "Nonlinear regime: adds self-interaction and structure-forming feedback.";
+        code.textContent = "□ρ − λρ² + μρ³ + η ∂ρ/∂t = S_ent ∇·v + V_unified(ρ,x,t)";
+      } else {
+        title.textContent = "PIF-c · Generalized master PDE";
+        text.textContent = "Full IQG-style regime: explicit time evolution with separated entropy-gradient coupling.";
+        code.textContent = "∂ρ/∂t = λρ − μρ² + νρ³ + β_S∇S + S_ent(∇·v) + V_unified(ρ,x,t)";
+      }
+    }
+
+    function render2D(current){
+      const field = document.getElementById("field2d");
+      field.style.gridTemplateColumns = `repeat(${state.size}, minmax(0, 1fr))`;
+      field.innerHTML = "";
+      current.cells.forEach(cell=>{
+        const el = document.createElement("div");
+        el.className = "cell";
+        const intensity = clamp(cell.rho / 1.6, 0, 1);
+        let color;
+        if(cell.quantule && state.showFamilies && cell.family){
+          color = familyColor(cell.family);
+        } else if(cell.quantule){
+          color = `rgba(${getComputedStyle(document.documentElement).getPropertyValue('--green')},${0.45 + intensity * 0.55})`;
+        } else if(cell.ignited){
+          color = `rgba(${getComputedStyle(document.documentElement).getPropertyValue('--orange')},${0.45 + intensity * 0.55})`;
+        } else {
+          color = `rgba(${getComputedStyle(document.documentElement).getPropertyValue('--blue')},${0.20 + intensity * 0.75})`;
+        }
+        el.style.background = color;
+        el.style.boxShadow = (cell.ignited || cell.quantule) ? `0 0 10px ${color}` : "none";
+        el.style.transform = cell.quantule ? "scale(1.08)" : (cell.ignited ? "scale(1.04)" : "scale(1)");
+        field.appendChild(el);
+      });
+    }
+
+    function render3D(current){
+      const field3d = document.getElementById("field3d");
+      field3d.innerHTML = "";
+      const size = state.size;
+      const planeSize = window.innerWidth < 640 ? 300 : 440;
+      const cellStep = planeSize / size;
+      const barWidth = window.innerWidth < 640 ? 12 : 18;
+      const maxHeight = window.innerWidth < 640 ? 120 : 180;
+
+      current.cells.forEach(cell=>{
+        const intensity = clamp(cell.rho / 2.0, 0, 1);
+        const h = Math.max(6, intensity * maxHeight);
+        const x = cell.x * cellStep;
+        const y = cell.y * cellStep;
+
+        let topColor, sideColor, frontColor;
+        if(cell.quantule && state.showFamilies && cell.family){
+          const fam = cell.family;
+          if(fam === "Compact core"){
+            topColor = `rgba(34,197,94,0.92)`; sideColor = `rgba(21,128,61,0.72)`; frontColor = `rgba(20,83,45,0.48)`;
+          } else if(fam === "Diffuse blob"){
+            topColor = `rgba(59,130,246,0.88)`; sideColor = `rgba(37,99,235,0.68)`; frontColor = `rgba(30,64,175,0.46)`;
+          } else if(fam === "Ridge"){
+            topColor = `rgba(147,51,234,0.90)`; sideColor = `rgba(126,34,206,0.70)`; frontColor = `rgba(88,28,135,0.46)`;
+          } else if(fam === "Anchor"){
+            topColor = `rgba(249,115,22,0.92)`; sideColor = `rgba(194,65,12,0.72)`; frontColor = `rgba(124,45,18,0.48)`;
+          } else if(fam === "Transient"){
+            topColor = `rgba(148,163,184,0.82)`; sideColor = `rgba(100,116,139,0.62)`; frontColor = `rgba(71,85,105,0.42)`;
+          } else {
+            topColor = `rgba(236,72,153,0.90)`; sideColor = `rgba(219,39,119,0.70)`; frontColor = `rgba(157,23,77,0.46)`;
+          }
+        } else if(cell.quantule){
+          topColor = `rgba(${getComputedStyle(document.documentElement).getPropertyValue('--green')},0.92)`;
+          sideColor = `rgba(46,139,87,0.72)`;
+          frontColor = `rgba(28,94,59,0.48)`;
+        } else if(cell.ignited){
+          topColor = `rgba(${getComputedStyle(document.documentElement).getPropertyValue('--orange')},0.90)`;
+          sideColor = `rgba(215,95,20,0.72)`;
+          frontColor = `rgba(150,70,18,0.48)`;
+        } else {
+          topColor = `rgba(${getComputedStyle(document.documentElement).getPropertyValue('--blue')},0.72)`;
+          sideColor = `rgba(55,120,220,0.44)`;
+          frontColor = `rgba(35,80,165,0.34)`;
+        }
+
+        const bar = document.createElement("div");
+        bar.className = "bar";
+        bar.style.left = `${x}px`;
+        bar.style.top = `${y}px`;
+        bar.style.height = `${h}px`;
+        bar.style.transform = `translateZ(${h/2}px)`;
+        bar.style.opacity = String(0.4 + intensity * 0.6);
+
+        const top = document.createElement("div");
+        top.className = "bar-face bar-top";
+        top.style.background = topColor;
+        top.style.width = `${barWidth}px`;
+
+        const front = document.createElement("div");
+        front.className = "bar-face bar-front";
+        front.style.background = frontColor;
+        front.style.width = `${barWidth}px`;
+        front.style.height = `${h}px`;
+
+        const side = document.createElement("div");
+        side.className = "bar-face bar-side";
+        side.style.background = sideColor;
+        side.style.height = `${h}px`;
+
+        bar.appendChild(top);
+        bar.appendChild(front);
+        bar.appendChild(side);
+        field3d.appendChild(bar);
+      });
+    }
+
+    function renderField(){
+      const current = state.frames[Math.min(state.frameIndex, state.frames.length - 1)] || {cells:[], frame:0, peak:0, mean:0, ignitedFraction:0, quantuleCount:0, phase:"Emergence", timeActiveFraction:0, frozenFraction:1, flowActiveFraction:0, alignment:0, timeFieldMap:{}, flowFieldMap:{}};
+
+      const field2d = document.getElementById("field2d");
+      const field3dWrap = document.getElementById("field3dWrap");
+
+      if(state.viewMode === "2d"){
+        field2d.style.display = "grid";
+        field3dWrap.style.display = "none";
+        render2D(current);
+        requestAnimationFrame(() => {
+          const r = field2d.getBoundingClientRect();
+          drawTimeField(document.getElementById("timeField2d"), current, r.width || 440, r.height || 440, false);
+          drawInfoFlow(document.getElementById("infoFlow2d"), current, r.width || 440, r.height || 440, false);
+          document.getElementById("timeField3d").innerHTML = "";
+          document.getElementById("timeField3d").style.display = "none";
+          document.getElementById("infoFlow3d").innerHTML = "";
+          document.getElementById("infoFlow3d").style.display = "none";
+        });
+      } else {
+        field2d.style.display = "none";
+        field3dWrap.style.display = "flex";
+        render3D(current);
+        requestAnimationFrame(() => {
+          const wrap = document.getElementById("field3dWrap").getBoundingClientRect();
+          drawTimeField(document.getElementById("timeField3d"), current, wrap.width || 440, wrap.height || 500, true);
+          drawInfoFlow(document.getElementById("infoFlow3d"), current, wrap.width || 440, wrap.height || 500, true);
+          document.getElementById("timeField2d").innerHTML = "";
+          document.getElementById("timeField2d").style.display = "none";
+          document.getElementById("infoFlow2d").innerHTML = "";
+          document.getElementById("infoFlow2d").style.display = "none";
+        });
+      }
+
+      const ignitionThreshold = 0.03;
+      const ignitionFrameObj = state.frames.find(f => f.ignitedFraction >= ignitionThreshold);
+      const ignitionFrame = ignitionFrameObj ? ignitionFrameObj.frame : null;
+      const ignitionStatus = ignitionFrame === null ? "Silent" : (current.frame >= ignitionFrame ? "Ignited" : "Pending");
+
+      document.getElementById("mFrame").textContent = `${current.frame}/${Math.max(state.frames.length - 1, 0)}`;
+      document.getElementById("mPeak").textContent = fmt(current.peak);
+      document.getElementById("mMean").textContent = fmt(current.mean);
+      document.getElementById("mIgnited").textContent = `${fmt(current.ignitedFraction * 100, 0)}%`;
+      document.getElementById("mIgnitionFrame").textContent = ignitionFrame === null ? "—" : String(ignitionFrame);
+      document.getElementById("mIgnitionStatus").textContent = ignitionStatus;
+      document.getElementById("mIgnitionText").textContent =
+        ignitionFrame === null ? "No ignition detected yet" : `Activation begins when ignited area exceeds ${fmt(ignitionThreshold * 100, 0)}%`;
+      document.getElementById("mQuantules").textContent = String(current.quantuleCount || 0);
+      document.getElementById("mPhase").textContent = current.phase || "Emergence";
+      document.getElementById("mPeakReal").textContent = `${fmt(current.peak, 2)} × ρ_real`;
+      document.getElementById("mInteract").textContent = current.interactionState || "—";
+      document.getElementById("mDistance").textContent = current.pairDistance === null ? "—" : fmt(current.pairDistance, 3);
+      document.getElementById("mFamily").textContent = current.dominantFamily || "—";
+      document.getElementById("mFamilyCount").textContent = String(current.familyDiversity || 0);
+      document.getElementById("mTimeActive").textContent = `${fmt(current.timeActiveFraction * 100, 0)}%`;
+      document.getElementById("mFrozen").textContent = `${fmt(current.frozenFraction * 100, 0)}%`;
+      document.getElementById("mFlowActive").textContent = `${fmt(current.flowActiveFraction * 100, 0)}%`;
+      document.getElementById("mAlignment").textContent = `${fmt(((current.alignment + 1) / 2) * 100, 0)}%`;
+
+      const last = state.frames[state.frames.length - 1] || current;
+      document.getElementById("sPeak").textContent = fmt(last.peak);
+      document.getElementById("sMean").textContent = fmt(last.mean);
+      document.getElementById("sIgnited").textContent = `${fmt(last.ignitedFraction * 100, 0)}%`;
+      document.getElementById("sIgnition").textContent = ignitionFrame === null ? "—" : `Frame ${ignitionFrame}`;
+      document.getElementById("sQuantules").textContent = String(state.frames.maxQuantules || 0);
+      document.getElementById("sReinit").textContent = state.frames.reinitDetected ? "Yes" : "No";
+      document.getElementById("sThreshold").textContent = `${fmt(state.threshold, 2)} × S_crit`;
+      document.getElementById("sIgniteTime").textContent = (ignitionFrame !== null && state.threshold >= 0.95 && state.threshold <= 1.05)
+        ? "≈1.03e-43 s (reference)"
+        : (ignitionFrame !== null ? "Needs threshold ≈ 1.0" : "—");
+      document.getElementById("sInteract").textContent = last.interactionState || "—";
+      document.getElementById("sDistance").textContent = last.pairDistance === null ? "—" : fmt(last.pairDistance, 3);
+      document.getElementById("sFamily").textContent = state.frames.topFamily || "—";
+      document.getElementById("sFamilyDiversity").textContent = String(state.frames.familyDiversity || 0);
+      const totals = state.frames.familyTotals || {};
+      document.getElementById("famCompact").textContent = String(totals["Compact core"] || 0);
+      document.getElementById("famDiffuse").textContent = String(totals["Diffuse blob"] || 0);
+      document.getElementById("famRidge").textContent = String(totals["Ridge"] || 0);
+      document.getElementById("famAnchor").textContent = String(totals["Anchor"] || 0);
+      document.getElementById("famTransient").textContent = String(totals["Transient"] || 0);
+      document.getElementById("famHybrid").textContent = String(totals["Hybrid"] || 0);
+      document.getElementById("sTimeActive").textContent = `${fmt((state.frames.maxTimeActive || 0) * 100, 0)}%`;
+      document.getElementById("sFrozen").textContent = `${fmt((state.frames.minFrozen || 0) * 100, 0)}%`;
+      document.getElementById("sFlowActive").textContent = `${fmt((state.frames.maxFlowActive || 0) * 100, 0)}%`;
+      document.getElementById("sAlignment").textContent = `${fmt((((state.frames.bestAlignment || 0) + 1) / 2) * 100, 0)}%`;
+
+      const slider = document.getElementById("frameSlider");
+      slider.max = Math.max(state.frames.length - 1, 0);
+      slider.value = state.frameIndex;
+    }
+
+    function recompute(){
+      updateEquationText();
+      state.frames = simulateFrames();
+      state.frameIndex = 0;
+      renderField();
+    }
+
+    function presetA(){
+      state.mode = "pif-a";
+      state.fieldMode = "radial";
+      state.viewMode = "2d";
+      state.runMode = "normal";
+      state.rho0 = 0.18;
+      state.threshold = 0.24;
+      state.N = 0.30;
+      state.eta = 0.85;
+      state.U = 0.08;
+      state.Sent = 0.45;
+      state.diffusionStrength = 0.18;
+      state.steps = 60;
+      syncInputs();
+      recompute();
+    }
+
+    function presetB(){
+      state.mode = "pif-b";
+      state.fieldMode = "radial";
+      state.viewMode = "3d";
+      state.runMode = "normal";
+      state.rho0 = 0.22;
+      state.threshold = 0.22;
+      state.lambda1 = 0.85;
+      state.mu = 0.55;
+      state.eta = 0.72;
+      state.Sent = 0.62;
+      state.U = 0.10;
+      state.diffusionStrength = 0.15;
+      state.steps = 60;
+      syncInputs();
+      recompute();
+    }
+
+    function presetC(){
+      state.mode = "pif-c";
+      state.fieldMode = "anisotropic";
+      state.viewMode = "3d";
+      state.runMode = "normal";
+      state.seedSeparation = 0.28;
+      state.seedStrength = 1.00;
+      state.repulsionStrength = 0.20;
+      state.bridgeStrength = 0.04;
+      state.familyClassifier = "balanced";
+      state.showFamilies = true;
+      state.rho0 = 0.35;
+      state.threshold = 0.12;
+      state.lambda1 = 1.20;
+      state.mu = 0.55;
+      state.nu = 0.22;
+      state.betaS = 1.20;
+      state.Sent = 0.90;
+      state.U = 0.20;
+      state.diffusionStrength = 0.10;
+      state.steps = 60;
+      syncInputs();
+      recompute();
+    }
+
+    function presetManuscript(){
+      state.mode = "pif-c";
+      state.fieldMode = "anisotropic";
+      state.viewMode = "3d";
+      state.runMode = "normal";
+      state.normalizedManuscriptMode = true;
+      state.rho0 = 0.85;
+      state.threshold = 1.00;
+      state.lambda1 = 1.15;
+      state.mu = 0.68;
+      state.nu = 0.20;
+      state.betaS = 1.05;
+      state.Sent = 0.75;
+      state.U = 0.14;
+      state.eta = 0.72;
+      state.N = 0.24;
+      state.diffusionStrength = 0.09;
+      state.steps = 70;
+      syncInputs();
+      recompute();
+    }
+
+    function syncInputs(){
+      document.getElementById("mode").value = state.mode;
+      document.getElementById("fieldMode").value = state.fieldMode;
+      document.getElementById("viewMode").value = state.viewMode;
+      document.getElementById("runMode").value = state.runMode;
+      document.getElementById("showTimeField").value = state.showTimeField ? "on" : "off";
+      document.getElementById("timeFieldStep").value = String(state.timeFieldStep);
+      document.getElementById("timeFieldMode").value = state.timeFieldMode;
+      document.getElementById("timeFieldActivation").value = state.timeFieldActivation;
+      document.getElementById("showInfoFlow").value = state.showInfoFlow ? "on" : "off";
+      document.getElementById("infoFlowMode").value = state.infoFlowMode;
+      document.getElementById("quantuleThreshold").value = String(state.quantuleThreshold);
+      document.getElementById("quantulePersistence").value = String(state.quantulePersistenceFrames);
+      controlDefs.forEach(([key,_,__,___,step])=>{
+        const input = document.getElementById(`input-${key}`);
+        const pill = document.getElementById(`pill-${key}`);
+        if(input) input.value = state[key];
+        if(pill) pill.textContent = fmt(state[key], step >= 1 ? 0 : 2);
+      });
+    }
+
+    document.getElementById("mode").addEventListener("change", e => { state.mode = e.target.value; recompute(); });
+    document.getElementById("fieldMode").addEventListener("change", e => { state.fieldMode = e.target.value; recompute(); });
+    document.getElementById("viewMode").addEventListener("change", e => { state.viewMode = e.target.value; renderField(); });
+    document.getElementById("runMode").addEventListener("change", e => { state.runMode = e.target.value; recompute(); });
+    document.getElementById("seedSeparation").addEventListener("change", e => { state.seedSeparation = Number(e.target.value); recompute(); });
+    document.getElementById("seedStrength").addEventListener("change", e => { state.seedStrength = Number(e.target.value); recompute(); });
+    document.getElementById("repulsionStrength").addEventListener("change", e => { state.repulsionStrength = Number(e.target.value); recompute(); });
+    document.getElementById("bridgeStrength").addEventListener("change", e => { state.bridgeStrength = Number(e.target.value); recompute(); });
+    document.getElementById("familyClassifier").addEventListener("change", e => { state.familyClassifier = e.target.value; recompute(); });
+    document.getElementById("showFamilies").addEventListener("change", e => { state.showFamilies = e.target.value === "on"; renderField(); });
+    document.getElementById("showTimeField").addEventListener("change", e => { state.showTimeField = e.target.value === "on"; renderField(); });
+    document.getElementById("timeFieldStep").addEventListener("change", e => { state.timeFieldStep = Number(e.target.value); renderField(); });
+    document.getElementById("timeFieldMode").addEventListener("change", e => { state.timeFieldMode = e.target.value; recompute(); });
+    document.getElementById("timeFieldActivation").addEventListener("change", e => { state.timeFieldActivation = e.target.value; recompute(); });
+    document.getElementById("showInfoFlow").addEventListener("change", e => { state.showInfoFlow = e.target.value === "on"; renderField(); });
+    document.getElementById("infoFlowMode").addEventListener("change", e => { state.infoFlowMode = e.target.value; recompute(); });
+    document.getElementById("quantuleThreshold").addEventListener("change", e => { state.quantuleThreshold = Number(e.target.value); recompute(); });
+    document.getElementById("quantulePersistence").addEventListener("change", e => { state.quantulePersistenceFrames = Number(e.target.value); recompute(); });
+
+    document.getElementById("presetA").addEventListener("click", presetA);
+    document.getElementById("presetB").addEventListener("click", presetB);
+    document.getElementById("presetC").addEventListener("click", presetC);
+    document.getElementById("presetManuscript").addEventListener("click", presetManuscript);
+
+    document.getElementById("playBtn").addEventListener("click", ()=>{
+      state.playing = !state.playing;
+      document.getElementById("playBtn").textContent = state.playing ? "Pause" : "Play";
+    });
+
+    document.getElementById("resetBtn").addEventListener("click", ()=>{
+      state.frameIndex = 0;
+      renderField();
+    });
+
+    document.getElementById("frameSlider").addEventListener("input", e => {
+      state.frameIndex = Number(e.target.value);
+      renderField();
+    });
+
+    window.addEventListener("resize", ()=>renderField());
+
+    buildControls();
+    presetC();
+
+    setInterval(()=>{
+      if(!state.playing || !state.frames.length) return;
+      state.frameIndex = (state.frameIndex + 1) % state.frames.length;
+      renderField();
+    }, 90);
+  </script>
+</body>
+</html>
